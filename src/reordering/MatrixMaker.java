@@ -43,7 +43,6 @@ public class MatrixMaker {
 
 		
 		makeMatrix(sourceContentArray,targetContentArray, alignContentArray);
-		
 	}
 	
 	
@@ -52,6 +51,7 @@ public class MatrixMaker {
 			matrixs.add(new AlignmentMatrix(source[i], target[i], align[i]));
 		}
 	}
+	
 	
 	public List getMatrixs() {return matrixs;}
 

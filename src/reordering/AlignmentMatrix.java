@@ -221,4 +221,37 @@ public class AlignmentMatrix {
 	}
 	
 	
+	//tra ve hang thap nhat co align trong khoang tu lower den upper, bi gioi han boi row
+	private int getLowestAlignRow(int lower, int upper, int row) {
+		int lowestRow = row;
+		int r = 0;
+	
+		for (int col = lower; col <= upper; ++col) {
+			while ((r <= row) && (isAlign(r, col)) == false) ++r;
+			if (r <lowestRow) lowestRow = r;
+			continue;
+		}
+		
+		return lowestRow;
+	}
+	
+	//tra ve hang cao nhat co align trong khoang tu lower den upper, bi gioi han boi row
+	
+	private int getHighestAlignRow(int lower, int upper, int row) {
+		int highestRow = row;
+		int r = mMaxRow-1;
+		
+		for (int col = lower; col <= upper; ++col) {
+			while((r >= row) && (isAlign(r, col) == false)) --r;
+			if (r > highestRow) highestRow = r;
+			continue;
+		}
+		return highestRow;
+	}
+	
+	private int getLowestAlignCol(int lower, int upper, int col) {
+		int lowestCol 
+	}
+	
+	
 }

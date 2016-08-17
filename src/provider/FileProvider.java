@@ -14,10 +14,24 @@ public class FileProvider extends ContentProvider{
 	private final Object lock = new Object();
 	private BackgroundThread mThread;
 	
+	public interface Observer {
+		void onGetContentSuccess(String content);
+	}
+	
+	private Observer mListener = null;
+	
+	
 	public FileProvider(String fileName) {
 		mFileName = fileName;
 		super.mContent = null;
 		mThread = new BackgroundThread();
+	}
+	
+	public FileProvider(String fileName, Observer listener) {
+		mFileName = fileName;
+		mThread = new BackgroundThread();
+		super.mContent = null;
+		mListener = listener;
 	}
 	
 	public FileProvider() {
@@ -78,6 +92,9 @@ public class FileProvider extends ContentProvider{
 					 }
 					 mContent = buffer.toString();
 					 isCompleted = true;
+					 if (mListener != null) {
+						 mListener.onGetContentSuccess(mContent);
+					 }
 					 lock.notifyAll();
 					 
 				} catch (IOException e){

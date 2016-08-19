@@ -2,6 +2,9 @@ package reordering;
 
 import java.util.*;
 
+import log.ConsoleLogging;
+import log.Logable;
+
 public class AlignmentMatrix {
 	private String[] mSourceSentence;
 	private String[] mTargetSentence;
@@ -14,6 +17,8 @@ public class AlignmentMatrix {
 	public static final String alignmentSeparateSymbol = "-";
 	
 	private List<PairBlock> pairBlocks = new ArrayList<PairBlock>();
+	
+	private Logable logWriter = ConsoleLogging.getInstace();
 	
 	public AlignmentMatrix(String sourceSentence, String targetSentence, String aligment) {
 		mSourceSentence = sourceSentence.split(wordSeparateSymbol);
@@ -129,6 +134,10 @@ public class AlignmentMatrix {
 				addPairBlock(blockA, blockB);
 			
 			}
+			
+			for (PairBlock pair : pairBlocks) {
+				pair.toString();
+			}
 		}
 			
 		
@@ -213,9 +222,58 @@ public class AlignmentMatrix {
 	
 	
 	public void discontinousProcess() {
+		int lowestAlignCol;
+		int highestAlignCol;
+		int lowestAlignRow;
+		int highestAlignRow;
+		
+		/*handle when occur discontinous align on row*/
 		for (int row = 0; row < mMaxRow; ++row) {
 			for (int col = 0; col < mMaxCol-2; ++col) {
+				if (isAlign(row,col) == true) {
+					if (isAlign(row, col+1) == false) {
+						highestAlignCol = getHighestAlignCol(row,row,col);
+						logWriter.log("highestAlignCol:" + highestAlignCol);
+						if (highestAlignCol > col) {
+							lowestAlignRow = getLowestAlignRow(col, highestAlignCol, row);
+							highestAlignRow = getHighestAlignRow(col,highestAlignCol,row);
+							logWriter.log("lowestAlignRow:"+lowestAlignRow);
+							logWriter.log("highestAlignRow:"+highestAlignRow);
+							fillDiscontinous(lowestAlignRow, highestAlignRow, col, highestAlignCol);
+						}
+					}
+				}
+			}
+		}
+		
+		
+		/*Handle when discontinous align occur on col*/
+		for (int col =0; col < mMaxCol; ++col) {
+			for (int row = 0; row < mMaxRow-2;++row) {
+				if (isAlign(row,col) == true) {
+					if (isAlign(row+1, col) == false) {
+						highestAlignRow = getHighestAlignRow(col,col,row);
+						logWriter.log("highestAlignRow:"+highestAlignRow);
+						if (highestAlignRow > row) {
+							highestAlignCol = getHighestAlignCol(row,highestAlignRow,col);
+							logWriter.log("highestAlignCol:"+highestAlignCol);
+							lowestAlignCol = getLowestAlignCol(row,highestAlignRow,col);
+							logWriter.log("lowestAlignCol"+lowestAlignCol);
+							fillDiscontinous(row, highestAlignRow, lowestAlignCol, highestAlignCol);
+		
+						}
+					}
+				}
 				
+			}
+		}
+	}
+	
+	
+	private void fillDiscontinous(int lowerRow, int higherRow, int lowerCol, int higherCol) {
+		for (int row = lowerRow; row <= higherRow; ++row) {
+			for (int col = lowerCol; col <= higherCol; ++col) {
+				if (isAlign(row, col) == false) mMatrix[row][col] = AlignType.SEMI;
 			}
 		}
 	}
@@ -223,12 +281,14 @@ public class AlignmentMatrix {
 	
 	//tra ve hang thap nhat co align trong khoang tu lower den upper, bi gioi han boi row
 	private int getLowestAlignRow(int lower, int upper, int row) {
+		logWriter.log("getLowestAlignRow");
 		int lowestRow = row;
 		int r = 0;
 	
 		for (int col = lower; col <= upper; ++col) {
 			while ((r <= row) && (isAlign(r, col)) == false) ++r;
 			if (r <lowestRow) lowestRow = r;
+			r = 0;
 			continue;
 		}
 		
@@ -238,19 +298,48 @@ public class AlignmentMatrix {
 	//tra ve hang cao nhat co align trong khoang tu lower den upper, bi gioi han boi row
 	
 	private int getHighestAlignRow(int lower, int upper, int row) {
+		logWriter.log("getHighestAlignRow");
 		int highestRow = row;
 		int r = mMaxRow-1;
 		
 		for (int col = lower; col <= upper; ++col) {
 			while((r >= row) && (isAlign(r, col) == false)) --r;
 			if (r > highestRow) highestRow = r;
+			r = mMaxRow-1;
 			continue;
 		}
 		return highestRow;
 	}
 	
+	//tra ve cot cao nhat trong khoang hang` tu lower den upper, 
+	
 	private int getLowestAlignCol(int lower, int upper, int col) {
-		int lowestCol 
+		logWriter.log("getLowestAlignCol");
+		int lowestCol = col;
+		int c = 0;
+		
+		for (int row = lower; row <= upper; ++row) {
+			while((c <= col) && (isAlign(row,c)) == false) ++c;
+			if (c < lowestCol) lowestCol = c;
+			c = 0;
+			continue;
+		}
+		return lowestCol;
+	}
+	//tra ve cot thap nhat trong khoang hang` tu lower den upper, 
+	
+	private int getHighestAlignCol(int lower, int upper, int col) {
+		logWriter.log("getHighestAlignCol");
+		int highestCol = col;
+		int c = mMaxCol - 1;
+		for (int row = lower; row <= upper; ++row) {
+			while((c >= col) && (isAlign(row,c) == false)) --c;
+			if (c > highestCol) highestCol =  c;
+			
+			c = mMaxCol - 1;
+			continue;
+		}
+		return highestCol;
 	}
 	
 	

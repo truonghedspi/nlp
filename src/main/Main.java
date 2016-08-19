@@ -25,10 +25,13 @@ public class Main  {
 	
 															
 	public static void main(String[] args) {
-		AlignmentMatrix matrix = new AlignmentMatrix("0 1 2 3 4", "0 1 2 3 4 5", "1-3 1-4 2-0 3-2 4-1");
+		AlignmentMatrix matrix = new AlignmentMatrix("0 1 2 3 4", "0 1 2 3", "0-0 1-1 2-0 3-3 4-2");
+		System.out.println(matrix.toString());
+		matrix.discontinousProcess();
+		
 		System.out.println(matrix.toString());
 		matrix.blockExtracting();
-
+		//matrix.
 		
 	}
 	

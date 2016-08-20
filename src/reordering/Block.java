@@ -1,8 +1,11 @@
 package reordering;
 
-public class Block implements Cloneable{
+import java.awt.Graphics;
+
+public class Block implements Cloneable {
 	private AlignmentMatrix mMatrix;
 	private int mTargetMin, mTargetMax, mSourceMax,mSourceMin;
+	public static final int BLOCK_SIZE = 30;
 	
 	public Block(int tMin, int tMax, int sMin,int sMax, AlignmentMatrix matrix) {
 		mTargetMin = tMin;
@@ -40,6 +43,7 @@ public class Block implements Cloneable{
 	public int getTargetMax() {return mTargetMax;}
 	public int getSourceMin() {return mSourceMin;}
 	public int getSourceMax() {return mSourceMax;}
+	public AlignmentMatrix getAlignMatrix() {return mMatrix;}
 	
 	@Override
 	public String toString() {
@@ -51,5 +55,46 @@ public class Block implements Cloneable{
 		builder.append("tmax:" + mTargetMax + "|");
 		return builder.toString();
 	}
+	
+	public boolean isContain(Block block) {
+		if (mSourceMax >= block.getSourceMax() 
+				&& mSourceMin <= block.getSourceMin()
+				&& mTargetMin <= block.getTargetMin()
+				&& mTargetMax >= block.getTargetMax()
+				) return true;
+		return false;
+	}
+	
+	public void setUnAlign() {
 		
+		for (int row = mTargetMin; row <= mTargetMax; ++row) {
+			for (int col = mSourceMin; col <= mSourceMax; ++col) {
+				mMatrix.setMatrixCellValue(row, col, AlignType.NONE);
+			}
+		}
+	}
+	
+	public void moveLeft(int distance) {
+		/*Swap value on align matrix*/
+		for (int row = mTargetMin; row <= mTargetMax; ++row) {
+			for (int col = mSourceMin; col <= mSourceMax; ++col) {
+				mMatrix.swapCellValue(row, col, row, col-distance);
+			}
+		}
+	}
+	
+	public void moveRight(int distance) {
+		for (int row = mTargetMin; row <= mTargetMax; ++row) {
+			for (int col = mSourceMax; col >= mSourceMin; --col) {
+				mMatrix.swapCellValue(row, col, row, col+distance);
+				System.out.println("Swap:");
+				System.out.println("Row:" + row);
+				System.out.println("Col:" + col);
+				System.out.println("new Col:"+(col+distance));
+			}
+		}
+	}
+	
+	
+
 }

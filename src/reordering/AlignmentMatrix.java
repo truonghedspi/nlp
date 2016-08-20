@@ -53,7 +53,13 @@ public class AlignmentMatrix {
 	
 	@Override
 	public String toString() {
+		
 		StringBuilder builder = new StringBuilder();
+		builder.append("Source sentance:");
+		for (int i = 0; i < mSourceSentence.length; ++i) {
+			builder.append(mSourceSentence[i] + " ");
+		}
+		builder.append("\n");
 		for (int row = 0; row < mMaxRow; ++row) {
 			for (int col = 0; col <mMaxCol; ++col) {
 				if (mMatrix[row][col] == AlignType.ALIGN ) builder.append("1 ");
@@ -100,8 +106,6 @@ public class AlignmentMatrix {
 				Block blockB = getBlock(sCurrent, sCurrent);
 				Block blockA = getBlock(sCurrent-1, sCurrent-1);
 				if (blockA == null || blockB == null) continue;
-				print("Block B:"+ blockB.toString());
-				print("Block A:"+blockA.toString());
 				Block blockG = blockA;
 				
 				int x = sCurrent - 2;
@@ -109,7 +113,6 @@ public class AlignmentMatrix {
 					
 
 					blockG = getBlock(x, sCurrent-1);
-					print("G new:"+ blockG.toString());
 					if (blockG.isConsistent()) {
 						blockA = blockG;
 					}
@@ -135,14 +138,10 @@ public class AlignmentMatrix {
 			
 			}
 			
-			for (PairBlock pair : pairBlocks) {
-				pair.toString();
-			}
 		}
 			
 		
 		for (int i = 0; i < pairBlocks.size(); ++i) {
-			System.out.println("Shit");
 			PairBlock pariblock = pairBlocks.get(i);
 			pariblock.toString();
 		}
@@ -326,8 +325,8 @@ public class AlignmentMatrix {
 		}
 		return lowestCol;
 	}
-	//tra ve cot thap nhat trong khoang hang` tu lower den upper, 
 	
+	//tra ve cot thap nhat trong khoang hang` tu lower den upper, 
 	private int getHighestAlignCol(int lower, int upper, int col) {
 		logWriter.log("getHighestAlignCol");
 		int highestCol = col;
@@ -342,5 +341,101 @@ public class AlignmentMatrix {
 		return highestCol;
 	}
 	
+	public List normalizePairBlock() {
+		List<PairBlock> temp = new ArrayList(pairBlocks);
+		List<PairBlock> res = new ArrayList<PairBlock>();
+		List<PairBlock> removeList = new ArrayList<PairBlock>();
+		
+		if (pairBlocks.size() == 1) return pairBlocks;
+		PairBlock currentPair, otherPair;
+		
+		for (int i = temp.size()-1; i > 0; --i) {
+			currentPair = temp.get(i);
+			for (int j = i-1; j >= 0; --j) {
+				otherPair = temp.get(j);
+				if (currentPair.isContain(otherPair)) {
+					removeList.add(otherPair);
+				}
+			}
+		}
+		
+		for (PairBlock pairBlock : removeList) {
+			temp.remove(pairBlock);
+		}
+		return temp;
+	}
+	
+	
+	public void printPairsBlock(List<PairBlock> pairBlocks) {
+		for (PairBlock pairBlock : pairBlocks) {
+			logWriter.log(pairBlock.toString());
+		}
+	}
+	
+	
+	private void swap(PairBlock pair) {
+		/*
+		AlignType[][] matrix = cloneMatrix();
+		Block next = pair.getBlockNext();
+		Block prev = pair.getBlockPrev();
+		
+		setUnAlign(pair);
+		for (int row = next.getTargetMin(); row <= next.getTargetMax(); ++row) {
+			for (int col = prev.getSourceMin(); 
+					col <= prev.getSourceMin() + next.getSourceMax()-next.getSourceMin();
+					++col) {
+				mMatrix[row][col] = matrix[row][col+next.getSourceMax()-next.getSourceMin()];
+			}
+		}
+		*/
+	}
+	
+	
+	
+	private AlignType[][] cloneMatrix() {
+		AlignType[][] matrix = new AlignType[mMaxRow][mMaxCol];
+		for (int row = 0; row < mMaxRow; ++row) {
+			for (int col = 0; col < mMaxCol; ++col) {
+				matrix[row][col] = mMatrix[row][col];
+			}
+		}
+		return matrix;
+	}
+	
+	
+	
+	public void setMatrixCellValue(int row, int col, AlignType type) {
+		mMatrix[row][col] = type;
+	}
+	
+	public void swapCellValue(int row1, int col1, int row2, int col2) {
+		AlignType temp = mMatrix[row1][col1];
+		
+		setMatrixCellValue(row1,col1,mMatrix[row2][col2]);
+		setMatrixCellValue(row2,col2,temp);
+	}
+	
+	/**
+	 * use to swap 2 positions of source sentence
+	 * @param p1:position 1
+	 * @param p2:position 2
+	 */
+	public void swapSourceSentence(int p1, int p2) {
+		
+	}
+	
+	public void reordering() {
+		/*swap in matrix*/
+		for (PairBlock pair: pairBlocks) {
+			pair.swap();
+		}
+		/*swap in source sentence*/
+		//TODO:implement swap POS TAG
+	}
+	
+	//GETTER
+	public AlignType[][] getMaxtrix() {return mMatrix;}
+	public String[] getSourceSentence() {return mSourceSentence;}
 	
 }
+ 

@@ -17,6 +17,7 @@ public class AlignmentMatrix {
 	public static final String alignmentSeparateSymbol = "-";
 	
 	private List<PairBlock> pairBlocks = new ArrayList<PairBlock>();
+	private List<Block> reorderingDimension = new ArrayList<Block>();
 	
 	private Logable logWriter = ConsoleLogging.getInstace();
 	
@@ -59,6 +60,7 @@ public class AlignmentMatrix {
 		for (int i = 0; i < mSourceSentence.length; ++i) {
 			builder.append(mSourceSentence[i] + " ");
 		}
+		
 		builder.append("\n");
 		for (int row = 0; row < mMaxRow; ++row) {
 			for (int col = 0; col <mMaxCol; ++col) {
@@ -67,6 +69,18 @@ public class AlignmentMatrix {
 				else builder.append("0 ");
 			}
 			
+			builder.append("\n");
+		}
+		
+		builder.append("Block Pair:\n");
+		for(PairBlock pair : pairBlocks) {
+			builder.append(pair.toString());
+			builder.append("\n");
+		}
+		
+		builder.append("Block Demension:\n");
+		for(Block block : reorderingDimension) {
+			builder.append(block.toString());
 			builder.append("\n");
 		}
 		
@@ -88,7 +102,10 @@ public class AlignmentMatrix {
 	public void blockExtracting() {
 		new Runnable() {
 			public void run() {
+				discontinousProcess();
 				extract();
+				normalizePairBlock();
+				reordering();
 			}
 		}.run();
 	
@@ -341,28 +358,35 @@ public class AlignmentMatrix {
 		return highestCol;
 	}
 	
-	public List normalizePairBlock() {
+	public void normalizePairBlock() {
 		List<PairBlock> temp = new ArrayList(pairBlocks);
 		List<PairBlock> res = new ArrayList<PairBlock>();
-		List<PairBlock> removeList = new ArrayList<PairBlock>();
+		List<Block> containers = new ArrayList<Block>(); 
+		List<Block> ignorList = new ArrayList<Block>();
 		
-		if (pairBlocks.size() == 1) return pairBlocks;
-		PairBlock currentPair, otherPair;
+		Block curBlock, otherBlock;
 		
-		for (int i = temp.size()-1; i > 0; --i) {
-			currentPair = temp.get(i);
-			for (int j = i-1; j >= 0; --j) {
-				otherPair = temp.get(j);
-				if (currentPair.isContain(otherPair)) {
-					removeList.add(otherPair);
+		for (int i = 0 ; i < temp.size(); ++i) {
+			containers.add(temp.get(i).getContainer());
+		}
+		
+		for (int i = 0 ; i < containers.size(); ++i) {
+			curBlock = containers.get(i);
+			for (int j = 0; j < containers.size(); ++j) {
+				if (i== j) continue;
+				otherBlock = containers.get(j);
+				if (curBlock.isContain(otherBlock)) {
+					ignorList.add(otherBlock);
+					System.out.println(curBlock.toString());
 				}
 			}
 		}
 		
-		for (PairBlock pairBlock : removeList) {
-			temp.remove(pairBlock);
+		for (int i = 0; i < containers.size(); ++i) {
+			if (ignorList.contains(containers.get(i)) == false) {
+				reorderingDimension.add(containers.get(i));
+			}
 		}
-		return temp;
 	}
 	
 	
@@ -415,27 +439,56 @@ public class AlignmentMatrix {
 		setMatrixCellValue(row2,col2,temp);
 	}
 	
-	/**
-	 * use to swap 2 positions of source sentence
-	 * @param p1:position 1
-	 * @param p2:position 2
-	 */
-	public void swapSourceSentence(int p1, int p2) {
-		
-	}
 	
 	public void reordering() {
-		/*swap in matrix*/
 		for (PairBlock pair: pairBlocks) {
 			pair.swap();
 		}
-		/*swap in source sentence*/
-		//TODO:implement swap POS TAG
+		
+		System.out.println(toString());
 	}
 	
 	//GETTER
 	public AlignType[][] getMaxtrix() {return mMatrix;}
 	public String[] getSourceSentence() {return mSourceSentence;}
+	
+	
+	public void moveLeftBlocksOnContainer(Block container, int distance) {
+		if (distance <=0 ) return;
+		
+		Block next, prev;
+		for (PairBlock pair: pairBlocks) {
+			next = pair.getBlockNext();
+			prev = pair.getBlockPrev();
+			if (container.isContain(next)) {
+				next.setSourceMax(next.getSourceMax()-distance);
+				next.setSourceMin(next.getSourceMin()-distance);
+			} 
+			
+			if (container.isContain(prev)) {
+				prev.setSourceMax(prev.getSourceMax()-distance);
+				prev.setSourceMin(prev.getSourceMin()-distance);
+			}
+		}
+	}
+	
+	
+	public void moveRightBlocksOnContainer(Block container, int distance) {
+		Block next, prev;
+		for (PairBlock pair: pairBlocks) {
+			next = pair.getBlockNext();
+			prev = pair.getBlockPrev();
+			if (container.isContain(next)) {
+				next.setSourceMax(next.getSourceMax()+distance);
+				next.setSourceMin(next.getSourceMin()+distance);
+			} 
+			
+			if (container.isContain(prev)) {
+				prev.setSourceMax(prev.getSourceMax()+distance);
+				prev.setSourceMin(prev.getSourceMin()+distance);
+			}
+		}
+	}
 	
 }
  

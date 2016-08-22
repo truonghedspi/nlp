@@ -1,5 +1,7 @@
 package reordering;
 
+import log.ConsoleLogging;
+
 public class PairBlock {
 	private Block mBlockPrev;
 	private Block mBlockNext;
@@ -27,26 +29,33 @@ public class PairBlock {
 	public Block getContainer() {
 		int smin, smax, tmin, tmax;
 		
-		smin = mBlockPrev.getSourceMin();
-		smax = mBlockNext.getSourceMax();
-		tmin = mBlockNext.getSourceMin();
-		tmax = mBlockPrev.getTargetMax();
+		smin = mBlockNext.getSourceMin() < mBlockPrev.getSourceMin() ?
+				mBlockNext.getSourceMin(): mBlockPrev.getSourceMin();
+		smax = mBlockNext.getSourceMax() > mBlockPrev.getSourceMax() ? 
+				mBlockNext.getSourceMax() : mBlockPrev.getSourceMax();
+		tmin = mBlockNext.getTargetMin() < mBlockPrev.getTargetMin() ?
+				mBlockNext.getTargetMin(): mBlockPrev.getTargetMin();
+		tmax = mBlockNext.getTargetMax() > mBlockPrev.getTargetMax() ?
+				mBlockNext.getTargetMax() : mBlockPrev.getTargetMax();
 		
 		return new Block(tmin, tmax, smin, smax, mBlockNext.getAlignMatrix());
 	}
 	
 	//kiem tra xem 2 cap pair block co bao gom nhau khong?
 	public boolean isContain(PairBlock other) {
-		return mBlockPrev.isContain(other.getBlockPrev());
+		return getContainer().isContain(other.getContainer());
 	}
 	
 	
 	public void swap() {
 		Block next = getBlockNext();
 		Block prev = getBlockPrev();
+		int nextDistance, prevDistance;
 		
-		next.moveLeft(prev.getSourceMax()-prev.getSourceMin()+1);
-		prev.moveRight(next.getSourceMax()-next.getSourceMin()+1);
+		nextDistance = prev.getSourceMax()-prev.getSourceMin()+1;
+		prevDistance = next.getSourceMax()-next.getSourceMin()+1;
+		next.moveLeft(nextDistance);
+		prev.moveRight(prevDistance);
 		
 		/*swap*/
 		String[] sourceSentence = next.getAlignMatrix().getSourceSentence();
@@ -56,12 +65,12 @@ public class PairBlock {
 		int distance = prev.getSourceMax()-prev.getSourceMin()+1;
 		while (i < distance) {
 			moveSourceSubStringLeft(sourceSentence, next.getSourceMin()-i, next.getSourceMax()-i);
-			System.out.println("A:" + next.getSourceMin());
-			System.out.println("B: " + next.getSourceMax());
 			++i;
 		}
 		
-		
+		AlignmentMatrix matrix = next.getAlignMatrix();
+		matrix.moveLeftBlocksOnContainer(next, nextDistance);
+		matrix.moveRightBlocksOnContainer(prev, prevDistance);	
 	}
 	
 	
@@ -81,7 +90,4 @@ public class PairBlock {
 		}
 		sourceSentence[upper] = temp;
 	}
-	
-	
-
 }

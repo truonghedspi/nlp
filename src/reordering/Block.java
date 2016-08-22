@@ -39,11 +39,20 @@ public class Block implements Cloneable {
 		}
 	}
 	
+	
+	//Getter
 	public int getTargetMin() {return mTargetMin;}
 	public int getTargetMax() {return mTargetMax;}
 	public int getSourceMin() {return mSourceMin;}
 	public int getSourceMax() {return mSourceMax;}
 	public AlignmentMatrix getAlignMatrix() {return mMatrix;}
+	
+	
+	//Setter
+	public void setTargetMin(int tmin) {mTargetMin = tmin;}
+	public void setTargetMax(int tmax) {mTargetMax = tmax;}
+	public void setSourceMin(int smin) {mSourceMin = smin;}
+	public void setSourceMax(int smax) {mSourceMax = smax;}
 	
 	@Override
 	public String toString() {
@@ -81,6 +90,7 @@ public class Block implements Cloneable {
 				mMatrix.swapCellValue(row, col, row, col-distance);
 			}
 		}
+		
 	}
 	
 	public void moveRight(int distance) {
@@ -93,6 +103,7 @@ public class Block implements Cloneable {
 				System.out.println("new Col:"+(col+distance));
 			}
 		}
+	
 	}
 	
 	

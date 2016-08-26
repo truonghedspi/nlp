@@ -52,10 +52,19 @@ public class PairBlock {
 		Block prev = getBlockPrev();
 		int nextDistance, prevDistance;
 		
+		
+		System.out.println("swap:\n");
+		System.out.println(next.toString());
+		System.out.println(prev.toString());
+		
 		nextDistance = prev.getSourceMax()-prev.getSourceMin()+1;
 		prevDistance = next.getSourceMax()-next.getSourceMin()+1;
+		
+		System.out.println("next distance:"+nextDistance);
+		System.out.println("prev distance:"+prevDistance);
 		next.moveLeft(nextDistance);
 		prev.moveRight(prevDistance);
+	
 		
 		/*swap*/
 		/*
@@ -73,8 +82,14 @@ public class PairBlock {
 		int distance = prev.getSourceMax()-prev.getSourceMin()+1;
 		moveSubString(next.getAlignMatrix().getSourceIndex(), distance,next );
 		AlignmentMatrix matrix = next.getAlignMatrix();
+		
 		matrix.moveLeftBlocksOnContainer(next, nextDistance);
-		matrix.moveRightBlocksOnContainer(prev, prevDistance);	
+		next.setSourceMax(next.getSourceMax()-nextDistance);
+		next.setSourceMin(next.getSourceMin()-nextDistance);
+		matrix.moveRightBlocksOnContainer(prev, prevDistance);
+		prev.setSourceMax(prev.getSourceMax()+prevDistance);
+		prev.setSourceMin(prev.getSourceMin()+prevDistance);
+
 	}
 	
 	private void moveSubString(String[] strArr, int distance, Block next) {

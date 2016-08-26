@@ -126,8 +126,9 @@ public class AlignmentMatrix {
 				discontinousProcess();
 				extract();
 				normalizePairBlock();
+				print(AlignmentMatrix.this.toString());
 				reordering();
-				print(toString());
+				print(AlignmentMatrix.this.toString());
 				extractPosRules();
 				System.out.println(posRules.toString());
 			}
@@ -517,9 +518,7 @@ public class AlignmentMatrix {
 		for (PairBlock pair: pairBlocks) {
 			pair.swap();
 		}
-		
-		System.out.println(toString());
-		
+				
 	}
 	
 	public void getPosReorderingRules() {
@@ -538,12 +537,12 @@ public class AlignmentMatrix {
 		for (PairBlock pair: pairBlocks) {
 			next = pair.getBlockNext();
 			prev = pair.getBlockPrev();
-			if (container.isContain(next)) {
+			if (container.isContain(next) && container != next) {
 				next.setSourceMax(next.getSourceMax()-distance);
 				next.setSourceMin(next.getSourceMin()-distance);
 			} 
 			
-			if (container.isContain(prev)) {
+			if (container.isContain(prev) && container != prev) {
 				prev.setSourceMax(prev.getSourceMax()-distance);
 				prev.setSourceMin(prev.getSourceMin()-distance);
 			}
@@ -556,12 +555,12 @@ public class AlignmentMatrix {
 		for (PairBlock pair: pairBlocks) {
 			next = pair.getBlockNext();
 			prev = pair.getBlockPrev();
-			if (container.isContain(next)) {
+			if (container.isContain(next) && container != next) {
 				next.setSourceMax(next.getSourceMax()+distance);
 				next.setSourceMin(next.getSourceMin()+distance);
 			} 
 			
-			if (container.isContain(prev)) {
+			if (container.isContain(prev) && container != prev) {
 				prev.setSourceMax(prev.getSourceMax()+distance);
 				prev.setSourceMin(prev.getSourceMin()+distance);
 			}

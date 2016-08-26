@@ -25,7 +25,7 @@ public class Main  {
 	
 															
 	public static void main(String[] args) {
-		AlignmentMatrix matrix = new AlignmentMatrix("A B C D", "X Y Z","0-0 1-2 2-0 3-1");
+		AlignmentMatrix matrix = new AlignmentMatrix("A B C D E", "0 1 2 3 4","0-4 1-2 2-3 3-0 4-1");
 		matrix.blockExtracting();
 		
 	}

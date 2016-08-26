@@ -58,6 +58,7 @@ public class PairBlock {
 		prev.moveRight(prevDistance);
 		
 		/*swap*/
+		/*
 		String[] sourceSentence = next.getAlignMatrix().getSourceSentence();
 		
 		
@@ -68,10 +69,21 @@ public class PairBlock {
 			++i;
 		}
 		
+		*/
+		int distance = prev.getSourceMax()-prev.getSourceMin()+1;
+		moveSubString(next.getAlignMatrix().getSourceIndex(), distance,next );
 		AlignmentMatrix matrix = next.getAlignMatrix();
 		matrix.moveLeftBlocksOnContainer(next, nextDistance);
 		matrix.moveRightBlocksOnContainer(prev, prevDistance);	
 	}
+	
+	private void moveSubString(String[] strArr, int distance, Block next) {
+		int i = 0;
+		while (i < distance) {
+			moveSourceSubStringLeft(strArr, next.getSourceMin()-i, next.getSourceMax()-i);
+			++i;
+		}
+	} 
 	
 	
 	/**
@@ -85,7 +97,6 @@ public class PairBlock {
 		if (lower == 0) return;
 		String temp = sourceSentence[lower-1];
 		for (int i = lower-1; i <= upper-1; ++i) {
-			System.out.println("Gan:"+sourceSentence[i]+"bang"+sourceSentence[i+1]);
 			sourceSentence[i] = sourceSentence[i+1];
 		}
 		sourceSentence[upper] = temp;

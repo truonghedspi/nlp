@@ -97,10 +97,6 @@ public class Block implements Cloneable {
 		for (int row = mTargetMin; row <= mTargetMax; ++row) {
 			for (int col = mSourceMax; col >= mSourceMin; --col) {
 				mMatrix.swapCellValue(row, col, row, col+distance);
-				System.out.println("Swap:");
-				System.out.println("Row:" + row);
-				System.out.println("Col:" + col);
-				System.out.println("new Col:"+(col+distance));
 			}
 		}
 	

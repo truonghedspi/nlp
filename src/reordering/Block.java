@@ -29,6 +29,11 @@ public class Block implements Cloneable {
 		return true;
 	}
 	
+	public boolean isOverlap(Block b) {
+	    //return x(sMin) < r.x + r.width(b.sMax) && x + width(sMax) > r.x(b.sMin) && y(tMin) < r.y + r.height(b.tMax) && y + height(tMax) > r.y(b.tMin);
+		 return mSourceMin < b.getSourceMax() && mSourceMax > b.getSourceMin() && mTargetMin < b.getTargetMax() && mTargetMax > b.getTargetMin();
+	}
+	
 	@Override
 	public Block clone() {
 		try {
@@ -105,3 +110,5 @@ public class Block implements Cloneable {
 	
 
 }
+
+

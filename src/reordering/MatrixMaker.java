@@ -3,6 +3,9 @@ package reordering;
 
 import provider.ContentProvider;
 import provider.FileProvider;
+import writer.ContentWriter;
+import writer.FileWriter;
+
 import java.util.*;
 
 public class MatrixMaker {
@@ -14,18 +17,47 @@ public class MatrixMaker {
 	private String mTargetContent;
 	private String mAlignmentContent;
 	
+	private static volatile int completedMatrix = 0;
+	private static int totalNumberMatrix;
+	
+	
+	
 	public static final String wordSeparateSymbol = " ";
 	public static final String sentenceSeparateSymbol = "\n";
+	public static final String mPosResultFileName = "~/result.txt";
 	
 	private List<AlignmentMatrix> matrixs = new ArrayList<AlignmentMatrix>();
 	
-	public MatrixMaker(String sourceFileName,String targetFileName, String alignmentFileName) {
+	private static MatrixMaker instance = null;
+	
+	private MatrixMaker() {}
+	
+	public static synchronized MatrixMaker getInstance() {
+		if (instance == null) instance = new MatrixMaker();
+		return instance;
+	}
+
+	
+	
+	public synchronized void increaseNumberOfCompletedMatrix() {
+		++completedMatrix;
+		if (completedMatrix == totalNumberMatrix) {
+			StringBuilder builder = new StringBuilder();
+			for(AlignmentMatrix matrix: matrixs) {
+				builder.append(matrix.getPosRules());
+			}
+			
+			ContentWriter writer = new FileWriter();
+			writer.write(builder.toString(), mPosResultFileName);
+		}
+	}
+	
+	public void make(String sourceFileName,String targetFileName, String alignmentFileName) {
+		
 		mSourceCorpusFileName = sourceFileName;
 		mTargetCorpusFileName = targetFileName;
 		mAlignmentFileName = alignmentFileName;
-	}
-	
-	public void make() {
+		
 		ContentProvider sourceProvider = new FileProvider(mSourceCorpusFileName);
 		sourceProvider.execute();
 		ContentProvider targetProvider = new FileProvider(mTargetCorpusFileName);
@@ -40,7 +72,7 @@ public class MatrixMaker {
 		String[] sourceContentArray = mSouceContent.split(sentenceSeparateSymbol);
 		String[] targetContentArray = mTargetContent.split(sentenceSeparateSymbol);
 		String[] alignContentArray = mAlignmentContent.split(sentenceSeparateSymbol);
-
+		totalNumberMatrix = sourceContentArray.length;
 		
 		makeMatrix(sourceContentArray,targetContentArray, alignContentArray);
 	}
@@ -54,5 +86,7 @@ public class MatrixMaker {
 	
 	
 	public List getMatrixs() {return matrixs;}
+	
+	
 
 }

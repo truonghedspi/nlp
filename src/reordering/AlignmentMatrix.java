@@ -7,6 +7,12 @@ import log.ConsoleLogging;
 import log.Logable;
 
 public class AlignmentMatrix {
+	public interface CallBack {
+		void interactWithPosRules(String rules);
+		void execute();
+	}
+	
+	
 	private String[] mSourceSentence;
 	private String[] mSourceSentenceIndex;
 	private String[] mTargetSentence;
@@ -24,7 +30,15 @@ public class AlignmentMatrix {
 	
 	private Logable logWriter = ConsoleLogging.getInstace();
 	
+	private CallBack mCallBack;
+	
+	public AlignmentMatrix(String sourceSentence, String targetSentence, String aligment, CallBack callBack) {
+		this(sourceSentence, targetSentence,aligment);
+		mCallBack = callBack;
+	}
+	
 	public AlignmentMatrix(String sourceSentence, String targetSentence, String aligment) {
+
 		mSourceSentence = sourceSentence.split(wordSeparateSymbol);
 		initSourceIndexArray();
 		mTargetSentence = targetSentence.split(wordSeparateSymbol);
@@ -48,17 +62,12 @@ public class AlignmentMatrix {
 		 posRules = new StringBuilder();
 	}
 
-	
 	private void initSourceIndexArray() {
 		mSourceSentenceIndex = new String[mSourceSentence.length];
 		for (int i = 0 ; i < mSourceSentence.length; ++i) {
 			mSourceSentenceIndex[i] = i + "";
-			System.out.println(mSourceSentence[i]);
-			
 		}
 	}
-	
-	
 	
 	private void initMatrix(int maxRow, int maxCol) {
 		for (int row = 0; row < maxRow; ++row) {
@@ -67,8 +76,7 @@ public class AlignmentMatrix {
 			}
 		}
 	}
-	
-	
+		
 	@Override
 	public String toString() {
 		
@@ -104,7 +112,13 @@ public class AlignmentMatrix {
 		return builder.toString();
 	}
 	
-	
+	public boolean isStillHaveReordering() {
+		for (int sCurrent = 1; sCurrent < mSourceSentence.length; ++sCurrent) {
+			if (hasAlign(sCurrent,sCurrent-1) == true) return true;
+		}
+		
+		return false;
+	}
 	
 	public boolean isAlign(int row, int col) {
 		if (mMatrix[row][col] == AlignType.ALIGN || mMatrix[row][col] == AlignType.SEMI)  {
@@ -113,25 +127,33 @@ public class AlignmentMatrix {
 		return false;
 	}
 	
-	public int getMaxCol() {return mMaxCol;}
-	public int getMaxRow() {return mMaxRow;}
-	public String[] getSourceIndex() {
-		return mSourceSentenceIndex;
+	private void resetVariable() {
+		pairBlocks.clear();
+		//reorderingDimension.clear();
 	}
-
 	
 	public void blockExtracting() {
 		new Runnable() {
 			public void run() {
 				discontinousProcess();
-				extract();
-				normalizePairBlock();
-				print(AlignmentMatrix.this.toString());
-				reordering();
-				print(AlignmentMatrix.this.toString());
-				extractPosRules();
-				System.out.println(posRules.toString());
+				while (true) {
+					extract();
+					normalizePairBlock();
+					System.out.println(AlignmentMatrix.this.toString());
+					reordering();
+					if (isStillHaveReordering()) {
+						resetVariable();
+						continue;
+					} else {
+						System.out.println(AlignmentMatrix.this.toString());
+						extractPosRules();
+						//MatrixMaker.getInstance().increaseNumberOfCompletedMatrix();
+						System.out.println(posRules.toString());
+						return;
+					}
+				}
 			}
+			
 		}.run();
 	
 	}
@@ -163,7 +185,7 @@ public class AlignmentMatrix {
 				blockG = blockB;
 				x = sCurrent+1;
 				while (x < mSourceSentence.length &&
-						blockA.getTargetMin() > blockB.getTargetMax() &&
+						blockA.getTargetMin() > blockG.getTargetMax() &&
 						isReorderingConsistent(blockA, blockG) == false
 						) {
 					blockG = getBlock(sCurrent,x);					
@@ -259,23 +281,23 @@ public class AlignmentMatrix {
 	}
 	
 	
-	public void discontinousProcess() {
+	private void discontinousProcess() {
 		int lowestAlignCol;
 		int highestAlignCol;
 		int lowestAlignRow;
 		int highestAlignRow;
 		
+		
+		
 		/*handle when occur discontinous align on row*/
 		for (int row = 0; row < mMaxRow; ++row) {
 			for (int col = 0; col < mMaxCol-2; ++col) {
 				if (isAlign(row,col) == true) {
-					if (isAlign(row, col+1) == false) {
-						highestAlignCol = getHighestAlignCol(row,row,col);
-						if (highestAlignCol > col) {
-							lowestAlignRow = getLowestAlignRow(col, highestAlignCol, row);
-							highestAlignRow = getHighestAlignRow(col,highestAlignCol,row);
-							fillDiscontinous(lowestAlignRow, highestAlignRow, col, highestAlignCol);
-						}
+					highestAlignCol = getHighestAlignCol(row,row,col);
+					if (highestAlignCol > col) {
+						lowestAlignRow = getLowestAlignRow(col, highestAlignCol, row);
+						highestAlignRow = getHighestAlignRow(col,highestAlignCol,row);
+						fillDiscontinous(lowestAlignRow, highestAlignRow, col, highestAlignCol);
 					}
 				}
 			}
@@ -286,21 +308,17 @@ public class AlignmentMatrix {
 		for (int col =0; col < mMaxCol; ++col) {
 			for (int row = 0; row < mMaxRow-2;++row) {
 				if (isAlign(row,col) == true) {
-					if (isAlign(row+1, col) == false) {
-						highestAlignRow = getHighestAlignRow(col,col,row);
-						if (highestAlignRow > row) {
-							highestAlignCol = getHighestAlignCol(row,highestAlignRow,col);
-							lowestAlignCol = getLowestAlignCol(row,highestAlignRow,col);
-							fillDiscontinous(row, highestAlignRow, lowestAlignCol, highestAlignCol);
-		
-						}
+					highestAlignRow = getHighestAlignRow(col,col,row);
+					if (highestAlignRow > row) {
+						highestAlignCol = getHighestAlignCol(row,highestAlignRow,col);
+						lowestAlignCol = getLowestAlignCol(row,highestAlignRow,col);
+						fillDiscontinous(row, highestAlignRow, lowestAlignCol, highestAlignCol);
 					}
 				}
 				
 			}
 		}
-		
-		
+	
 		/*
 		 * 
 		 * 
@@ -451,7 +469,7 @@ public class AlignmentMatrix {
 		return highestCol;
 	}
 	
-	public void normalizePairBlock() {
+	private void normalizePairBlock() {
 		List<PairBlock> temp = new ArrayList(pairBlocks);
 		List<PairBlock> res = new ArrayList<PairBlock>();
 		List<Block> containers = new ArrayList<Block>(); 
@@ -502,9 +520,6 @@ public class AlignmentMatrix {
 	
 	
 	
-	public void setMatrixCellValue(int row, int col, AlignType type) {
-		mMatrix[row][col] = type;
-	}
 	
 	public void swapCellValue(int row1, int col1, int row2, int col2) {
 		AlignType temp = mMatrix[row1][col1];
@@ -514,20 +529,14 @@ public class AlignmentMatrix {
 	}
 	
 	
-	public void reordering() {
+	private void reordering() {
 		for (PairBlock pair: pairBlocks) {
 			pair.swap();
 		}
 				
 	}
 	
-	public void getPosReorderingRules() {
-		
-	}
-	
-	//GETTER
-	public AlignType[][] getMaxtrix() {return mMatrix;}
-	public String[] getSourceSentence() {return mSourceSentence;}
+
 	
 	
 	public void moveLeftBlocksOnContainer(Block container, int distance) {
@@ -581,14 +590,22 @@ public class AlignmentMatrix {
 			 }
 			 posRules.append(":");
 			 posRules.append(tempBuilder);
-			 posRules.append("\n");
+			 posRules.append("|");
 			 tempBuilder.delete(0, tempBuilder.length());
 		}
-		
-		
-		
-		
 	}
 	
+	public int getMaxCol() {return mMaxCol;}
+	public int getMaxRow() {return mMaxRow;}
+	public String[] getSourceIndex() {
+		return mSourceSentenceIndex;
+	}
+	
+
+	public void setMatrixCellValue(int row, int col, AlignType type) {
+		mMatrix[row][col] = type;
+	}
+	
+	public StringBuilder getPosRules() {return posRules;}
 }
  

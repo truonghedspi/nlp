@@ -31,7 +31,7 @@ public class Block implements Cloneable {
 	
 	public boolean isOverlap(Block b) {
 	    //return x(sMin) < r.x + r.width(b.sMax) && x + width(sMax) > r.x(b.sMin) && y(tMin) < r.y + r.height(b.tMax) && y + height(tMax) > r.y(b.tMin);
-		 return mSourceMin < b.getSourceMax() && mSourceMax > b.getSourceMin() && mTargetMin < b.getTargetMax() && mTargetMax > b.getTargetMin();
+		 return mSourceMin <= b.getSourceMax() && mSourceMax >= b.getSourceMin() && mTargetMin <= b.getTargetMax() && mTargetMax >= b.getTargetMin();
 	}
 	
 	@Override
@@ -107,7 +107,20 @@ public class Block implements Cloneable {
 	
 	}
 	
-	
+	public static Block getContainer(Block b1, Block b2) {
+		int smin, smax, tmin, tmax;
+		
+		smin = b1.getSourceMin() < b2.getSourceMin() ?
+				b1.getSourceMin(): b2.getSourceMin();
+		smax = b1.getSourceMax() > b2.getSourceMax() ? 
+				b1.getSourceMax() : b2.getSourceMax();
+		tmin = b1.getTargetMin() < b2.getTargetMin() ?
+				b1.getTargetMin(): b2.getTargetMin();
+		tmax = b1.getTargetMax() > b2.getTargetMax() ?
+				b1.getTargetMax() : b2.getTargetMax();
+		
+		return new Block(tmin, tmax, smin, smax, b1.getAlignMatrix());
+	}
 
 }
 

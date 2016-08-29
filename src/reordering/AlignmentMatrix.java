@@ -22,7 +22,7 @@ public class AlignmentMatrix {
 	private int mMaxRow= -1;
 	private int mMaxCol = -1;
 	
-	public static final String wordSeparateSymbol = " ";
+	public static final String wordSeparateSymbol = "\\s+";
 	public static final String alignmentSeparateSymbol = "-";
 	
 	private List<PairBlock> pairBlocks = new ArrayList<PairBlock>();
@@ -38,10 +38,12 @@ public class AlignmentMatrix {
 	}
 	
 	public AlignmentMatrix(String sourceSentence, String targetSentence, String aligment) {
-
+		//System.out.println("Source sentence:" + sourceSentence);
+	
 		mSourceSentence = sourceSentence.split(wordSeparateSymbol);
 		initSourceIndexArray();
 		mTargetSentence = targetSentence.split(wordSeparateSymbol);
+		//System.out.println("target sentence:"+targetSentence);
 		
 		 mMaxRow = mTargetSentence.length;
 		 mMaxCol = mSourceSentence.length; 
@@ -55,8 +57,9 @@ public class AlignmentMatrix {
 			String[] align = subAlign.split(alignmentSeparateSymbol);
 			int col = Integer.parseInt(align[0]);
 			int row = Integer.parseInt(align[1]);
-					
+	
 			mMatrix[row][col] = AlignType.ALIGN;
+		
 		}
 		 
 		 posRules = new StringBuilder();
@@ -113,8 +116,12 @@ public class AlignmentMatrix {
 	}
 	
 	public boolean isStillHaveReordering() {
+		int prev;
 		for (int sCurrent = 1; sCurrent < mSourceSentence.length; ++sCurrent) {
-			if (hasAlign(sCurrent,sCurrent-1) == true) return true;
+			prev = sCurrent-1;
+			while (prev>=0 && isNullAlignment(prev)==true) --prev;
+			if (prev == -1) continue;
+			if (hasAlign(sCurrent,prev) == true) return true;
 		}
 		
 		return false;
@@ -137,18 +144,20 @@ public class AlignmentMatrix {
 			public void run() {
 				discontinousProcess();
 				while (true) {
+					//System.out.println(AlignmentMatrix.this.toString());
 					extract();
-					normalizePairBlock();
-					System.out.println(AlignmentMatrix.this.toString());
+					nullAlignmentProcess();
+					//stem.out.println(AlignmentMatrix.this.toString());
 					reordering();
+					normalizePairBlock();
 					if (isStillHaveReordering()) {
 						resetVariable();
 						continue;
 					} else {
-						System.out.println(AlignmentMatrix.this.toString());
+						//System.out.println(AlignmentMatrix.this.toString());
 						extractPosRules();
-						//MatrixMaker.getInstance().increaseNumberOfCompletedMatrix();
-						System.out.println(posRules.toString());
+						MatrixMaker.getInstance().increaseNumberOfCompletedMatrix();
+						//System.out.println(posRules.toString());
 						return;
 					}
 				}
@@ -158,20 +167,36 @@ public class AlignmentMatrix {
 	
 	}
 	
+	private void nullAlignmentProcess() {
+		Block next, prev;
+		for (PairBlock pair: pairBlocks) {
+			next = pair.getBlockNext();
+			prev = pair.getBlockPrev();
+			if (prev.getSourceMax() < next.getSourceMin()-1) {
+				prev.setSourceMax(next.getSourceMin()-1);
+			}
+		}
+	}
+	
 	private void print(String msg) {
 		System.out.println(msg);
 	}
 	
-	private void extract() {
-		
+	public void extract() {
+		int sMaxPrev = 0;
 		for (int sCurrent = 1; sCurrent < mSourceSentence.length; ++sCurrent) {
-			if (hasAlign(sCurrent, sCurrent-1) == true) {
+			if (isNullAlignment(sCurrent)) continue;
+			sMaxPrev = sCurrent-1;
+			while (sMaxPrev >= 0 && isNullAlignment(sMaxPrev)) --sMaxPrev;
+			if (sMaxPrev < 0) continue;
+			
+			if (hasAlign(sCurrent, sMaxPrev) == true) {
 				Block blockB = getBlock(sCurrent, sCurrent);
-				Block blockA = getBlock(sCurrent-1, sCurrent-1);
+				Block blockA = getBlock(sMaxPrev, sMaxPrev);
 				if (blockA == null || blockB == null) continue;
 				Block blockG = blockA;
 				
-				int x = sCurrent - 2;
+				int x = sMaxPrev - 1;
 				while (x >= 0 && blockG.getTargetMin() > blockB.getTargetMax()) {
 					
 
@@ -188,9 +213,12 @@ public class AlignmentMatrix {
 						blockA.getTargetMin() > blockG.getTargetMax() &&
 						isReorderingConsistent(blockA, blockG) == false
 						) {
-					blockG = getBlock(sCurrent,x);					
+					blockG = getBlock(sCurrent,x);	
+					System.out.println("s-x:"+sCurrent + " " + x);
+					System.out.println("BlockG:"+blockG.toString());
 					if (isReorderingConsistent(blockA,blockG) == true) {
 						blockB = blockG;
+						break;
 					}
 					
 					++x;
@@ -214,8 +242,14 @@ public class AlignmentMatrix {
 		pairBlocks.add(new PairBlock(prev, next));
 	}
 	
+	private boolean isNullAlignment(int sCurrent) {
+		if (getMinTarget(sCurrent) == mMaxRow) return true;
+		return false;
+	}
+	
 	//kiem tra 2 vi tri co xay ra align khong
 	private boolean hasAlign(int current, int prev) {
+		if (isNullAlignment(current) == true) return false;
 		if (getMaxTarget(current) < getMinTarget(prev)) {
 			return true;
 		}
@@ -228,7 +262,7 @@ public class AlignmentMatrix {
 			if (isAlign(row,col) == true ) return row;
 		}
 		
-		return -1;
+		return mMaxRow;
 	}
 	
 	private int getMaxTarget(int col) {
@@ -262,10 +296,16 @@ public class AlignmentMatrix {
 		return new Block(tMin, tMax, col, col, this);
 	}
 	
-	public boolean isReorderingConsistent(Block a, Block b) {
+	public boolean isReorderingConsistent(Block prev, Block next) {
+		int highestCol;
+		if (next.getTargetMax() >= prev.getTargetMin()) return false;
+		if (prev.getTargetMin() > next.getTargetMax() +1) {
+			highestCol = getHighestAlignCol(next.getTargetMax()+1, prev.getTargetMin()-1, 0);
+			if (highestCol < next.getSourceMax()) return true;
+			return false;
+		}
 		
-		Block container = getContainer(a,b);
-		return container.isConsistent();
+		return true;
 	}
 	
 	public Block getContainer(Block a, Block b) {
@@ -470,33 +510,30 @@ public class AlignmentMatrix {
 	}
 	
 	private void normalizePairBlock() {
-		List<PairBlock> temp = new ArrayList(pairBlocks);
-		List<PairBlock> res = new ArrayList<PairBlock>();
-		List<Block> containers = new ArrayList<Block>(); 
-		List<Block> ignorList = new ArrayList<Block>();
+		List<Block> containers = new ArrayList<Block>();
+		Block b1, b2;
 		
-		Block curBlock, otherBlock;
-		
-		for (int i = 0 ; i < temp.size(); ++i) {
-			containers.add(temp.get(i).getContainer());
+		for (PairBlock pair: pairBlocks) {
+			containers.add(pair.getContainer());
 		}
+		containers.addAll(reorderingDimension);
 		
 		for (int i = 0 ; i < containers.size(); ++i) {
-			curBlock = containers.get(i);
 			for (int j = 0; j < containers.size(); ++j) {
-				if (i== j) continue;
-				otherBlock = containers.get(j);
-				if (curBlock.isContain(otherBlock)) {
-					ignorList.add(otherBlock);
+				if (i == j) continue;
+				if (containers.get(i).isOverlap(containers.get(j))) {
+					b1 = containers.get(i);
+					b2 = containers.get(j);
+					Block container = Block.getContainer(b1, b2);
+					containers.remove(b1);
+					containers.remove(b2);
+					containers.add(container);
+					i = 0;
 				}
 			}
 		}
 		
-		for (int i = 0; i < containers.size(); ++i) {
-			if (ignorList.contains(containers.get(i)) == false) {
-				reorderingDimension.add(containers.get(i));
-			}
-		}
+		reorderingDimension = containers;
 	}
 	
 	

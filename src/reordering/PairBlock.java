@@ -41,6 +41,7 @@ public class PairBlock {
 		return new Block(tmin, tmax, smin, smax, mBlockNext.getAlignMatrix());
 	}
 	
+	
 	//kiem tra xem 2 cap pair block co bao gom nhau khong?
 	public boolean isContain(PairBlock other) {
 		return getContainer().isContain(other.getContainer());
@@ -52,16 +53,11 @@ public class PairBlock {
 		Block prev = getBlockPrev();
 		int nextDistance, prevDistance;
 		
-		
-		System.out.println("swap:\n");
-		System.out.println(next.toString());
-		System.out.println(prev.toString());
+
 		
 		nextDistance = prev.getSourceMax()-prev.getSourceMin()+1;
 		prevDistance = next.getSourceMax()-next.getSourceMin()+1;
-		
-		System.out.println("next distance:"+nextDistance);
-		System.out.println("prev distance:"+prevDistance);
+
 		next.moveLeft(nextDistance);
 		prev.moveRight(prevDistance);
 	

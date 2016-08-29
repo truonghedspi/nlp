@@ -24,7 +24,7 @@ public class MatrixMaker {
 	
 	public static final String wordSeparateSymbol = " ";
 	public static final String sentenceSeparateSymbol = "\n";
-	public static final String mPosResultFileName = "~/result.txt";
+	public static final String mPosResultFileName = "/home/truong/result.txt";
 	
 	private List<AlignmentMatrix> matrixs = new ArrayList<AlignmentMatrix>();
 	
@@ -36,19 +36,21 @@ public class MatrixMaker {
 		if (instance == null) instance = new MatrixMaker();
 		return instance;
 	}
-
-	
 	
 	public synchronized void increaseNumberOfCompletedMatrix() {
 		++completedMatrix;
+		System.out.println("completed:"+completedMatrix);
 		if (completedMatrix == totalNumberMatrix) {
 			StringBuilder builder = new StringBuilder();
-			for(AlignmentMatrix matrix: matrixs) {
-				builder.append(matrix.getPosRules());
-			}
+			for (int i = 0; i < matrixs.size(); ++i) {
+				if (!matrixs.get(i).getPosRules().toString().equals("")) {
+					builder.append("line-"+(i+1)  + ":"+ matrixs.get(i).getPosRules().toString() + "\n");
+				}
+			}			
 			
 			ContentWriter writer = new FileWriter();
 			writer.write(builder.toString(), mPosResultFileName);
+			System.out.println(matrixs.get(96).toString());
 		}
 	}
 	
@@ -86,7 +88,6 @@ public class MatrixMaker {
 	
 	
 	public List getMatrixs() {return matrixs;}
-	
-	
+
 
 }

@@ -2,6 +2,7 @@ package main;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 import processor.AvgLengthSentenceProcessor;
 import processor.ContentProcessor;
@@ -21,34 +22,25 @@ import writer.FileWriter;
 
 
 public class Main  { 
-
 	//viet nhat
-
-	public static final String sourceFileName = "/home/truong/nlp/reordering/corpus/train.clean.vi";
-	public static final String targetFileName = "/home/truong/nlp/reordering/corpus/train.clean.ja";
-	public static final String alignFileName = "/home/truong/nlp/reordering/vi-ja/working/train/model/aligned.grow-diag-final-and";
+	public static final String sourceFileName = "/home/truong/nlp/reordering/corpus/pos.ja";
+	public static final String targetFileName = "/home/truong/nlp/reordering/corpus/train.clean.vi";
+	public static final String alignFileName = "/home/truong/nlp/reordering/ja-vi/working/train/model/aligned.grow-diag-final-and";
 	
 															
 	public static void main(String[] args) {
-		/*
-		AlignmentMatrix matrix = new AlignmentMatrix("0 1 2 3", "0 1 2 3","0-2 1-0 2-3 3-1");
-		matrix.blockExtracting();
+		MatrixMaker.getInstance().make(sourceFileName, targetFileName, alignFileName);
+		System.out.println(MatrixMaker.getInstance().getMatrixs().size());
+		List<AlignmentMatrix> matrixs =MatrixMaker.getInstance().getMatrixs();
+		AlignmentMatrix matrix;
 		
-		*/
+		for (int i = 0; i < matrixs.size(); ++i) {
+			matrix = matrixs.get(i);
+			matrix.blockExtracting();
+		}
 		
-		/*
-		Rectangle r1 = new Rectangle(0,0,2,2);
-		Rectangle r2 = new Rectangle(2,2,2,2);
 		
-		System.out.println(r1.isOverlap(r2));
-
-		*/
-		
-		Block b1 = new Block(1,2,0,2, null);
-		Block b2 = new Block(0,1,1,2, null);
-		
-		System.out.println(b1.isOverlap(b2));
-		
+		//matrixs.get(96).blockExtracting();
 	}
 	
 }
